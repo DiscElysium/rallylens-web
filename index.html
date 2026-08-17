@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="RallyLens 双人羽毛球训练关系分析界面" />
+  <title>RallyLens — 双人训练关系画像</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="page-lines" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="RallyLens 首页">
+      <span class="brand-mark">RL</span>
+      <span class="brand-word">RALLYLENS</span>
+    </a>
+
+    <nav class="stage-nav" aria-label="训练阶段">
+      <button class="stage-tab is-active" type="button" data-stage="1">
+        <span>01</span> 自然打
+      </button>
+      <button class="stage-tab" type="button" data-stage="2">
+        <span>02</span> 目标练习
+      </button>
+      <button class="stage-tab" type="button" data-stage="3">
+        <span>03</span> 协同调整
+      </button>
+      <button class="stage-tab" type="button" data-stage="4">
+        <span>04</span> 计分小局
+      </button>
+    </nav>
+
+    <div class="top-actions">
+      <button class="text-action" type="button" id="methodButton">指标说明</button>
+      <button class="export-action" type="button" id="exportButton">导出当前数据 ↓</button>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="masthead" aria-labelledby="pageTitle">
+      <div class="masthead-title">
+        <p class="eyebrow">TWO PEOPLE · ONE TRAINING SYSTEM / 双人共同训练状态</p>
+        <h1 id="pageTitle"><span>RELATION</span><br />IN MOTION</h1>
+      </div>
+      <div class="masthead-copy">
+        <p class="session-index">[ PAIR 01 · STAGE 01 · S1 ]</p>
+        <h2>从两个人的动作之间，<br />看见训练关系。</h2>
+        <p>形状不是两份个人成绩，而是一段共同状态：谁在创造机会、谁在承受挑战、两人的目标是否靠近，以及这段关系如何随每一次来回而改变。</p>
+        <div class="source-stamp">
+          <span class="status-dot"></span>
+          <span>真实输入 · 45 个约 1 秒关系切片 · 双视角</span>
+          <span class="source-rule"></span>
+          <span>optimized relations v3</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="analysis-grid" aria-label="双视角视频和实时关系">
+      <div class="video-section">
+        <div class="section-heading">
+          <div>
+            <span class="section-no">01</span>
+            <p>SYNCED FOOTAGE</p>
+            <h2>双视角证据</h2>
+          </div>
+          <p class="section-note">两段视频由同一时间控制器驱动<br />拖动时间轴可回看任意关系状态</p>
+        </div>
+
+        <div class="video-pair">
+          <figure class="video-frame is-primary">
+            <video id="videoA" muted playsinline preload="metadata" src="media/camera-a.mp4"></video>
+            <figcaption>
+              <span><b>A</b> CAM · 01 → 02</span>
+              <span>主视角 / MASTER</span>
+            </figcaption>
+            <div class="video-scan" aria-hidden="true"></div>
+          </figure>
+
+          <figure class="video-frame">
+            <video id="videoB" muted playsinline preload="metadata" src="media/camera-b.mp4"></video>
+            <figcaption>
+              <span><b>B</b> CAM · 02 → 01</span>
+              <span>同步视角 / +0.00s</span>
+            </figcaption>
+            <div class="video-scan" aria-hidden="true"></div>
+          </figure>
+        </div>
+
+        <div class="transport">
+          <button class="play-control" type="button" id="playButton" aria-label="播放视频">
+            <span class="play-symbol" aria-hidden="true"></span>
+            <span id="playLabel">播放</span>
+          </button>
+          <span class="timecode" id="currentTime">00:00.0</span>
+          <input id="seekBar" class="seek-bar" type="range" min="0" max="45" value="0" step="0.01" aria-label="视频时间" />
+          <span class="timecode is-total">00:45.0</span>
+          <button class="mute-control" id="muteButton" type="button" aria-pressed="true">静音</button>
+        </div>
+
+        <section class="shape-metric-panel" aria-labelledby="shapeMetricPanelTitle">
+          <div class="shape-metric-panel-head">
+            <div>
+              <p>11 LIVE AXES / CLICK TO REVEAL</p>
+              <h3 id="shapeMetricPanelTitle">形状指标</h3>
+            </div>
+            <span>每张卡对应一个真实轮廓轴。默认不显示小球；点击后，该轴在双方形状上的真实位置变黑。</span>
+          </div>
+          <div class="shape-metric-cards" id="shapeMetricCards"></div>
+        </section>
+      </div>
+
+      <aside class="relation-section" aria-labelledby="relationTitle">
+        <div class="section-heading is-relation">
+          <div>
+            <span class="section-no">02</span>
+            <p>LIVE RELATION FIELD</p>
+            <h2 id="relationTitle">双人关系场</h2>
+          </div>
+          <div class="confidence-readout">
+            <span>证据置信度</span>
+            <strong id="confidenceValue">—</strong>
+          </div>
+        </div>
+
+        <div class="relation-figure-wrap">
+          <svg id="relationSvg" class="relation-figure" viewBox="0 0 620 520" role="img" aria-labelledby="relationSvgTitle relationSvgDesc">
+            <title id="relationSvgTitle">十一项实时关系指标直接形成的双人轮廓</title>
+            <desc id="relationSvgDesc">橙色与薄荷色分别是 P1、P2 的活动体。十一项实时指标各自占据一个固定轴，数值经明确方向转换后直接决定尖角顶点距离；各项越均衡，轮廓越接近规则多边形，单项高低会自然形成尖峰或内凹。两者的深色区域是真实几何交集，其距离由共同可训练性、舒适可练区、互惠、共同调节和节奏协同共同控制。浅色背景是两人目标图形的几何并集。</desc>
+            <defs>
+              <linearGradient id="gradA" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#ff6a2b" />
+                <stop offset="1" stop-color="#e9360a" />
+              </linearGradient>
+              <linearGradient id="gradB" x1="1" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#a9ded4" />
+                <stop offset="1" stop-color="#55b9aa" />
+              </linearGradient>
+              <linearGradient id="gradTarget" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stop-color="#f6b99e" />
+                <stop offset=".5" stop-color="#f3d9c8" />
+                <stop offset="1" stop-color="#b8ded7" />
+              </linearGradient>
+              <filter id="softShadow" x="-25%" y="-25%" width="150%" height="150%">
+                <feDropShadow dx="0" dy="18" stdDeviation="16" flood-color="#19202a" flood-opacity=".10" />
+              </filter>
+              <clipPath id="blobBClip">
+                <path id="blobBClipPath"></path>
+              </clipPath>
+            </defs>
+
+            <g class="court-ghost" aria-hidden="true">
+              <path d="M99 98H521L563 422H57Z" />
+              <path d="M310 98V422M78 260H542M178 98L161 422M442 98L459 422" />
+              <circle cx="310" cy="260" r="201" />
+            </g>
+
+            <path id="targetUnion" class="target-union" fill="url(#gradTarget)" fill-rule="nonzero"></path>
+            <g class="actual-shapes" filter="url(#softShadow)">
+              <path id="blobA" class="relation-blob blob-a" fill="url(#gradA)"></path>
+              <path id="blobB" class="relation-blob blob-b" fill="url(#gradB)"></path>
+            </g>
+            <path id="overlapRegion" class="overlap-region" clip-path="url(#blobBClip)"></path>
+            <path id="targetUnionHighlight" class="target-union-highlight" fill-rule="nonzero" aria-hidden="true"></path>
+            <g id="metricMarkers" class="metric-markers" aria-hidden="true"></g>
+
+            <g class="shape-label label-a">
+              <text x="108" y="472">P1 / 01</text>
+              <text x="108" y="492" class="shape-sub">P1 ACTIVITY BODY</text>
+            </g>
+            <g class="shape-label label-b">
+              <text x="512" y="472" text-anchor="end">P2 / 02</text>
+              <text x="512" y="492" text-anchor="end" class="shape-sub">P2 ACTIVITY BODY</text>
+            </g>
+            <text x="310" y="42" text-anchor="middle" class="target-caption">TARGET UNION / 两人目标图形并集</text>
+            <text id="overlapReadout" x="310" y="456" text-anchor="middle" class="overlap-readout">RELATION PROXIMITY —</text>
+          </svg>
+
+          <div class="relation-state">
+            <span id="relationKicker">LOADING FROZEN LIVE SLICES</span>
+            <strong id="relationState">载入关系切片</strong>
+            <p id="relationSentence">十一项实时指标直接决定十一处轮廓顶点；缺失值形成内凹缺口，不当作零值。</p>
+          </div>
+        </div>
+
+        <div class="shape-legend" aria-label="形状编码说明">
+          <div><span class="legend-mark angular-mark"></span><b>11 个真实轴</b><small>顶点直接对应数值</small></div>
+          <div><span class="legend-mark size-mark"></span><b>整体面积</b><small>多维关系总体展开</small></div>
+          <div><span class="legend-mark overlap-mark"></span><b>真实交集大小</b><small>五项协同关系控制距离</small></div>
+          <div><span class="legend-mark texture-mark"></span><b>均衡 / 失衡</b><small>各轴数值自然形成轮廓</small></div>
+          <div><span class="legend-mark target-mark"></span><b>浅色并集体</b><small>两人目标合并范围</small></div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="slice-section" aria-labelledby="sliceTitle">
+      <div class="section-heading is-slice">
+        <div>
+          <span class="section-no">03</span>
+          <p>RELATION SLICES / CONTINUOUS</p>
+          <h2 id="sliceTitle">关系切片</h2>
+        </div>
+        <div class="slice-live-label">
+          <span class="live-line"></span>
+          <span>随视频逐帧渐变</span>
+        </div>
+      </div>
+
+      <div class="slice-canvas-wrap" id="sliceCanvasWrap">
+        <canvas id="sliceCanvas" aria-label="双方机会贡献、互惠与压力随视频时间连续变化的关系切片图"></canvas>
+        <div class="slice-tooltip" id="sliceTooltip" hidden></div>
+      </div>
+
+      <div class="timeline-labels" aria-hidden="true">
+        <span>00:00</span><span>00:09</span><span>00:18</span><span>00:27</span><span>00:36</span><span>00:45</span>
+      </div>
+
+      <div class="event-strip">
+        <div class="event-index">
+          <span>LIVE SLICE</span>
+          <strong id="eventIndex">00 / 45</strong>
+        </div>
+        <div class="event-main">
+          <span id="eventTime">00:00.0</span>
+          <h3 id="eventTitle">载入每秒关系状态</h3>
+          <p id="eventEvidence">这里只显示无监督关系状态、可观察性与运动代理，不把它包装成逐拍真值。</p>
+        </div>
+        <dl class="live-metrics">
+          <div><dt>共同可训练性</dt><dd id="metricA">—</dd></div>
+          <div><dt>舒适可练区</dt><dd id="metricB">—</dd></div>
+          <div><dt>共同调节</dt><dd id="metricMutual">—</dd></div>
+          <div><dt>节奏协同</dt><dd id="metricFlow">—</dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <section class="stage-atlas-section" aria-labelledby="stageAtlasTitle">
+      <div class="section-heading is-stage-atlas">
+        <div>
+          <span class="section-no">04</span>
+          <p>CHI / CSCW METHODS × EXISTING STAGE DATA</p>
+          <h2 id="stageAtlasTitle">关系对照图谱</h2>
+        </div>
+        <p class="section-note">按时间尺度、证据来源和数值方向选择图形<br />实时区只覆盖当前视频的 45 秒，不外推为整阶段</p>
+      </div>
+
+      <div class="research-method-grid" aria-label="论文方法到本项目的转换">
+        <div>
+          <span>01 / JUXTAPOSE + OVERLAY</span>
+          <strong>并置与叠合</strong>
+          <p>把每个阶段的双方形状放在同一画布，交集继续表示声明过的关系靠近代理。</p>
+        </div>
+        <div>
+          <span>02 / SAME-SCALE MULTIPLES</span>
+          <strong>固定尺度小倍图</strong>
+          <p>四张图共享十一轴、半径和方向；差异来自阶段数据，不来自自动缩放。</p>
+        </div>
+        <div>
+          <span>03 / CLAIM-MATCHED FORMS</span>
+          <strong>让问题决定图形</strong>
+          <p>变化看折线、阶段看柱形、正负值看发散、单阶段值看参照；缺失和阻断不造图。</p>
+        </div>
+      </div>
+
+      <div class="atlas-subhead">
+        <div><span>A / B / C / D</span><strong>四阶段双人关系轮廓</strong></div>
+        <p>点击任一阶段，可同步高亮下方阶段图与完整指标矩阵。</p>
+      </div>
+      <div class="stage-profile-grid" id="stageProfileGrid"></div>
+
+      <div class="atlas-subhead is-metric-views">
+        <div><span>16 METRICS / FOUR VISUAL FAMILIES</span><strong>按数据特征分组呈现</strong></div>
+        <p>下方不是四类“好坏维度”，而是四种证据结构；点击任一图表仍可查看完整定义和 A/B/C/D 原值。</p>
+      </div>
+
+      <div class="metric-view-block is-dynamics">
+        <div class="metric-view-head">
+          <div><span>01 / 45-SECOND DYNAMICS</span><strong>片段内变化更重要</strong></div>
+          <p>01、06、08、09、13、15 · 与上方视频共用播放头；只称当前 45 秒片段，不称整阶段或整局。</p>
+        </div>
+        <div class="dynamic-metric-grid" id="dynamicMetricGrid"></div>
+      </div>
+
+      <div class="metric-view-split">
+        <section class="metric-view-block is-stage-bars" aria-labelledby="stageBarsTitle">
+          <div class="metric-view-head">
+            <div><span>02 / STAGE COMPARISON</span><strong id="stageBarsTitle">阶段汇总更可靠</strong></div>
+            <p>04、10、11、12、14 · A/B/C/D 使用同一 0–100 尺度，不暗示阶段必然进步。</p>
+          </div>
+          <div class="stage-bar-grid" id="stageBarGrid"></div>
+        </section>
+
+        <section class="metric-view-block is-human-evidence" aria-labelledby="humanEvidenceTitle">
+          <div class="metric-view-head">
+            <div><span>03 / GOAL + REPORT</span><strong id="humanEvidenceTitle">只在有条件的阶段比较</strong></div>
+            <p>02、03 · A/D 没有目标或反馈时保持空白，只呈现 B/C。</p>
+          </div>
+          <div class="human-evidence-grid" id="humanEvidenceGrid"></div>
+        </section>
+      </div>
+
+      <div class="metric-view-block is-special-cases">
+        <div class="metric-view-head">
+          <div><span>04 / SPECIAL EVIDENCE FORMS</span><strong>不能被普通柱状图代替</strong></div>
+          <p>05 有正负方向；16 只有 D 阶段参照值；07 缺少事件真值，因此分别处理。</p>
+        </div>
+        <div class="special-metric-grid" id="specialMetricGrid"></div>
+      </div>
+      <p class="atlas-footnote">所有折线与柱形都显示派生代理或阶段报告，不把它们升级为击球成功率、关系质量或学习效果；空值不是零。</p>
+    </section>
+
+    <section class="metrics-section" aria-labelledby="metricsTitle">
+      <div class="section-heading is-metrics">
+        <div>
+          <span class="section-no">05</span>
+          <p>ALL 16 RELATION METRICS / LIVE + STAGE</p>
+          <h2 id="metricsTitle">十六项关系数据</h2>
+        </div>
+        <p class="section-note">“当前视频点”＝播放到这一刻的代理值<br />A–D＝四个阶段的冻结汇总；— 表示没有数据，不是 0</p>
+      </div>
+
+      <div class="metrics-summary">
+        <div><strong>11</strong><span>随视频变化，也可比较阶段</span></div>
+        <div><strong>4</strong><span>只比较阶段，不显示即时值</span></div>
+        <div><strong>1</strong><span>暂不计算：缺少失误事件证据</span></div>
+        <p><b>这 16 项并不是同一种数据。</b>11 项可随视频变化并汇总到阶段，4 项只在阶段层成立，1 项因证据不足保持空缺。数值用于描述双人的运动关系，不直接判断关系好坏；上方双人形状只使用 11 项实时指标。</p>
+      </div>
+
+      <div class="metric-stage-focus" id="metricStageFocus" aria-live="polite">
+        <div class="focus-title">
+          <span id="focusMetricNo">01</span>
+          <div>
+            <p id="focusMetricStatus">实时 + 阶段</p>
+            <h3 id="focusMetricName">有效练习机会</h3>
+          </div>
+        </div>
+        <div class="focus-explanation" id="focusMetricMeaning">
+          <div><span>它回答</span><p id="focusMetricQuestion">两个人是否同时处于可观察、可共同练习的活动窗口？</p></div>
+          <div><span>指标含义</span><p id="focusMetricDefinition">在系统能够同时看清两个人的时间窗口中，双方都处于活跃状态的窗口占比。它反映这段视频里有多少双人活动片段具备继续分析的基本条件。</p></div>
+          <div><span>数值怎么读</span><p id="focusMetricReading">数值越高，可被系统识别的共同活动窗口越多。</p></div>
+          <div><span>解释边界</span><p id="focusMetricBoundary">它不等于真实击球机会，也不判断练习是否成功。</p></div>
+        </div>
+        <div class="focus-stage-values" id="focusStageValues"></div>
+      </div>
+
+      <div class="metric-matrix-wrap">
+        <div class="metric-matrix-header" aria-hidden="true">
+          <span>指标 / 证据状态</span><span>当前视频点</span><span>A 自然打</span><span>B 目标练习</span><span>C 协同调整</span><span>D 计分小局</span>
+        </div>
+        <div class="metric-matrix" id="metricMatrix"></div>
+      </div>
+      <p class="matrix-footnote">所有数值统一换算为 0–100，方便横向阅读；05“搭档增量贡献”保留正负方向。A–D 来自同一双人场次 G01-S1 的阶段汇总，不代表阶段优劣或必然进步。— 表示没有对应数据或未满足证据条件，不是 0。</p>
+    </section>
+
+    <section class="goal-section" aria-labelledby="goalTitle">
+      <div class="goal-number" aria-hidden="true">A+B</div>
+      <div class="goal-intro">
+        <p class="eyebrow">06 / GOALS BECOME THE REFERENCE BODY</p>
+        <h2 id="goalTitle">目标不是一条线，<br />而是双方可以共同进入的区域。</h2>
+      </div>
+      <div class="goal-person goal-a">
+        <span>PLAYER A · 01</span>
+        <h3>控制落点或线路</h3>
+        <p>成功信号：能把球控制到目标区域；阶段描述希望形成更多网前球机会。</p>
+      </div>
+      <div class="goal-person goal-b">
+        <span>PLAYER B · 02</span>
+        <h3>防守与防守过渡</h3>
+        <p>希望搭档稳定重复同一种来球，并尽量接近比赛情境；成功信号是用目标技术完成回应。</p>
+      </div>
+      <p class="goal-footnote">浅色目标实体是两个人分别目标轮廓的几何并集：它保留双方各自能够进入的目标范围，并将重叠部分合成同一实体。它是视觉参照而非达标阈值。</p>
+    </section>
+  </main>
+
+  <footer>
+    <span>RALLYLENS / RELATIONAL TRAINING PORTRAIT</span>
+    <span>GROUP 01 · STAGE 01 · SOURCE-TRACEABLE PROTOTYPE</span>
+    <span>2026.08</span>
+  </footer>
+
+  <dialog id="methodDialog" class="method-dialog">
+    <form method="dialog">
+      <button class="dialog-close" type="submit" aria-label="关闭">×</button>
+      <p class="eyebrow">HOW TO READ / 指标说明</p>
+      <h2>先读关系，再读个人。</h2>
+      <div class="method-list">
+        <div><b>01</b><span><strong>十一顶点＝十一项实时指标</strong>每个指标使用固定轴；正向指标越高越向外，配合成本与关系漂移使用明确反向轴。</span></div>
+        <div><b>02</b><span><strong>整体面积＝多维关系总体展开</strong>面积来自所有顶点共同形成的轮廓，不再用一个合成分数替代十一项原值。</span></div>
+        <div><b>03</b><span><strong>真实交集＝关系靠近代理</strong>共同可训练性、舒适可练区、互惠、共同调节与节奏协同共同控制两形状的距离；深色区域是两个实时多边形的真实几何交集，不是额外画出的装饰透镜。</span></div>
+        <div><b>04</b><span><strong>浅色实体＝两人目标并集</strong>先分别生成两个人的目标轮廓，再以一个无边框实体呈现两者的几何并集。</span></div>
+        <div><b>05</b><span><strong>规则与失衡＝十一轴自己说话</strong>所有顶点只用直线相连、不做圆角。十一项接近时自然形成较规则的多边形；单项特别高或低时自然形成尖峰或内凹。</span></div>
+      </div>
+      <p class="method-caveat">当前页面使用 optimized relations v3 的每秒切片、relation metrics v3 的 16 项合同和 G01-S1 四阶段冻结结果。第 7 项因缺少失误与球路真值保持空值；阶段专属指标不会回填到实时轮廓。</p>
+    </form>
+  </dialog>
+
+  <div class="stage-notice" id="stageNotice" role="status" aria-live="polite" hidden>
+    <span></span>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
+

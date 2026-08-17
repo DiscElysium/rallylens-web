@@ -1,0 +1,6 @@
+"session_id","stage_id","duration_seconds","slice_count","view_count","observed_coverage","effective_opportunity","target_matched_exposure","challenge_fit","response_conversion","partner_incremental_contribution","support_cost","repeat_after_error","joint_trainability","mutual_workable_zone","reciprocity","co_regulation","role_fluidity","tempo_coordination","resilience","relation_drift","stage_transfer"
+"G01-S1-P01-P02","A","276.0748","276","2","0.9529","0.4029","","","0.2071","","0.3114","","0.4484","0.516","0.5","0.7747","0.4709","0.6811","0.25","0.0884",""
+"G01-S1-P01-P02","B","487.0856","487","2","0.9979","0.2921","0.8889","1.0","0.2248","-0.0717","0.2587","","0.401","0.6281","0.62","0.4854","0.7391","0.5046","0.0667","0.0881",""
+"G01-S1-P01-P02","C","581.0795","581","2","0.9914","0.5582","0.2576","1.0","0.2113","0.0273","0.3449","","0.5243","0.6775","0.5811","0.6769","0.5851","0.6796","0.1667","0.0792",""
+"G01-S1-P01-P02","D","417.0156","417","2","0.9568","0.2874","","","0.2499","-0.0856","0.3309","","0.4322","0.5223","0.5453","0.7149","0.7913","0.6561","0.2667","0.0802","0.8724"
+

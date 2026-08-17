@@ -1,0 +1,368 @@
+{
+  "schema": "rallylens.dyadic-relationship-metrics.v3.catalog",
+  "metrics": [
+    {
+      "number": 1,
+      "id": "effective_opportunity",
+      "label": "有效练习机会",
+      "meaning": "在系统能够同时看清两个人的时间窗口中，双方都处于活跃状态的窗口占比。它反映这段视频里有多少双人活动片段具备继续分析的基本条件。",
+      "question": "两个人是否同时处于可观察、可共同练习的活动窗口？",
+      "reading": "数值越高，可被系统识别的共同活动窗口越多。",
+      "boundary": "它不等于真实击球机会，也不判断练习是否成功。",
+      "level": "dyad",
+      "live_available": true,
+      "current_estimator": "observability × mutual_activity",
+      "current_inputs": [
+        "双人足点轨迹",
+        "共同活跃",
+        "可观察性"
+      ],
+      "evidence_status": "movement_window_proxy",
+      "model_strategy": "先用人工击球时刻训练接触检测器，再把窗口分类改为击球级机会分类。",
+      "upgrade_condition": "可靠击球时刻、击球者、回合边界与机会有效性标注",
+      "direction": "higher_is_more_observable_joint_activity"
+    },
+    {
+      "number": 2,
+      "id": "target_matched_exposure",
+      "label": "目标匹配暴露",
+      "meaning": "先把参与者写下的训练目标映射到移动强度、活动范围、回应等可观察维度，再检查本阶段的运动形态是否沿这些目标方向出现。它描述的是“接近目标方向的暴露程度”。",
+      "question": "当前运动形态是否朝参与者文字目标所对应的方向变化？",
+      "reading": "数值越高，实际运动形态与文字目标映射方向越一致。",
+      "boundary": "文字目标经过规则映射；它不是技术目标完成率，也不证明练习有效。",
+      "level": "player_and_dyad",
+      "live_available": true,
+      "current_estimator": "目标文字规则映射后的轴向值均值；下降目标使用 1-value",
+      "current_inputs": [
+        "阶段目标JSON",
+        "移动强度",
+        "活跃持续",
+        "移动展开",
+        "发起节奏",
+        "回应可用",
+        "共同参与"
+      ],
+      "evidence_status": "human_grounded_rule_proxy",
+      "model_strategy": "对目标文本做多标签编码，用教练给出的片段级目标匹配标签训练多模态排序模型。",
+      "upgrade_condition": "目标输入时间戳、教练确认的目标维度/范围、片段级匹配标签",
+      "direction": "higher_is_more_aligned_with_mapped_direction"
+    },
+    {
+      "number": 3,
+      "id": "challenge_fit",
+      "label": "挑战适配",
+      "meaning": "汇总双方在阶段结束后对训练难度的主观选择，判断这一阶段是否被体验为太容易、合适或太困难。它是一项阶段末的人类报告，而不是由运动轨迹推断出的实时状态。",
+      "question": "阶段结束时，两个人是否都认为挑战难度合适？",
+      "reading": "数值越高，阶段末主观报告越接近“挑战合适”。",
+      "boundary": "它只代表阶段末报告，不能回填成视频中每一秒的真实感受。",
+      "level": "dyad_stage",
+      "live_available": false,
+      "current_estimator": "阶段末 challenge 原始选项的序位展示码均值",
+      "current_inputs": [
+        "阶段反馈JSON.challenge"
+      ],
+      "evidence_status": "human_report_stage_only",
+      "model_strategy": "收集片段级难度标注后训练有序分类或个体化难度模型。",
+      "upgrade_condition": "片段级太易/合适/太难标注与个体基线",
+      "direction": "higher_is_reported_fit"
+    },
+    {
+      "number": 4,
+      "id": "response_conversion",
+      "label": "回应转化",
+      "meaning": "在可观察到的一方移动发起中，统计另一方是否在随后 1–2 秒内也出现移动回应。它反映一个人的动作发起有多经常接续为另一个人的运动反应。",
+      "question": "一方开始移动后，另一方是否会在 1–2 秒内做出移动回应？",
+      "reading": "数值越高，可观察到的移动发起越常转化为对方的移动回应。",
+      "boundary": "它检测的是移动回应，不是成功回球率，也不知道回应是否技术正确。",
+      "level": "player_and_dyad",
+      "live_available": true,
+      "current_estimator": "双方 response_availability 的可观察均值",
+      "current_inputs": [
+        "双人足点轨迹",
+        "移动发起事件",
+        "回应窗口"
+      ],
+      "evidence_status": "movement_response_proxy",
+      "model_strategy": "使用击球者、接球者与回球成功标注训练时序事件模型。",
+      "upgrade_condition": "击球级响应窗口、回球结果与无响应原因",
+      "direction": "higher_is_more_movement_response"
+    },
+    {
+      "number": 5,
+      "id": "partner_incremental_contribution",
+      "label": "搭档增量贡献",
+      "meaning": "以 A 自然打阶段作为个人基线，比较进入双人训练阶段后，搭档的共同参与和回应可用性发生了多少变化。结果保留正负方向，用来呈现相对基线的增加或减少。",
+      "question": "进入双人阶段后，搭档的共同参与和回应相对 A 阶段改变了多少？",
+      "reading": "正值表示高于 A 阶段基线，负值表示低于基线；绝对值越大，变化越明显。",
+      "boundary": "这是阶段差值，不是因果效应，不能断言变化由某位搭档造成。",
+      "level": "player_and_dyad_stage",
+      "live_available": false,
+      "current_estimator": "0.5×伙伴共同参与变化 + 0.5×伙伴回应可用变化",
+      "current_inputs": [
+        "A阶段个人基线",
+        "当前阶段共同参与",
+        "当前阶段回应可用"
+      ],
+      "evidence_status": "descriptive_delta_not_causal",
+      "model_strategy": "用多场随机化角色安排、个体固定效应和因果/层级模型估计伙伴增量。",
+      "upgrade_condition": "更多双人组合、随机化角色顺序、重复测量与混杂变量",
+      "direction": "signed_delta"
+    },
+    {
+      "number": 6,
+      "id": "support_cost",
+      "label": "配合成本",
+      "meaning": "把两人的移动强度、活动范围与当前共同参与水平放在一起，估计维持这段双人活动所伴随的运动负荷。它关注“为了继续配合需要动多少、展开多大”，而不是直接评价配合好坏。",
+      "question": "为了维持共同参与，两个人需要付出多大的移动与空间展开负荷？",
+      "reading": "数值越高，维持当前共同参与所伴随的运动负荷越大。",
+      "boundary": "高成本不一定不好，可能来自有意的高强度训练；它也不是生理疲劳测量。",
+      "level": "player_and_dyad",
+      "live_available": true,
+      "current_estimator": "mean(movement_intensity, spatial_range) × (1 - 0.5×linked_participation)",
+      "current_inputs": [
+        "移动强度",
+        "移动展开",
+        "共同参与"
+      ],
+      "evidence_status": "movement_load_proxy",
+      "model_strategy": "加入姿态、关节负荷、心率/RPE后训练个体化成本估计器。",
+      "upgrade_condition": "姿态/关节角度、体能或RPE、片段级配合负荷标注",
+      "direction": "lower_is_lower_cost_not_necessarily_better"
+    },
+    {
+      "number": 7,
+      "id": "repeat_after_error",
+      "label": "失误后重复机会",
+      "meaning": "原本用于统计一次失误发生后，搭档是否在短时间内再次提供相似球路或相似任务机会，让练习者能够立即重试。目前缺少可靠的失误、球路和下一次供球标注，因此暂不生成数值。",
+      "question": "出现失误后，搭档是否很快再次提供相似的练习机会？",
+      "reading": "当前不显示数值，因为系统还不能可靠识别失误、球路和下一次供球。",
+      "boundary": "空缺表示证据不足，不是 0，也不能解释为搭档没有提供支持。",
+      "level": "dyad_event_and_stage",
+      "live_available": false,
+      "current_estimator": "当前缺少失误与球路真值，数值保持空缺",
+      "current_inputs": [
+        "需要：失误事件",
+        "需要：球种/落点/线路",
+        "需要：下一次供球"
+      ],
+      "evidence_status": "blocked_missing_event_truth",
+      "model_strategy": "从标注视频训练失误检测、球路嵌入与下一机会匹配模型。",
+      "upgrade_condition": "失误类型、击球者、球路相似度和下一机会标签",
+      "direction": "higher_is_more_repeat_support"
+    },
+    {
+      "number": 8,
+      "id": "joint_trainability",
+      "label": "共同可训练性",
+      "meaning": "综合双方是否共同活跃、活跃程度是否匹配、彼此是否出现移动回应以及视频是否足够可观察。它描述当前窗口是否具备让两个人继续一起练习的运动条件。",
+      "question": "这一段里，两个人是否同时活跃、能够回应，并且节奏没有明显脱节？",
+      "reading": "数值越高，当前窗口越具备继续共同练习的运动条件。",
+      "boundary": "它是多项运动代理的组合，不等于教练对训练质量的最终判断。",
+      "level": "dyad",
+      "live_available": true,
+      "current_estimator": "mean(mutual_activity, activation_match, response_reciprocity, response_conversion) × observability",
+      "current_inputs": [
+        "共同活跃",
+        "活跃匹配",
+        "回应互惠",
+        "回应转化",
+        "可观察性"
+      ],
+      "evidence_status": "transparent_composite_proxy",
+      "model_strategy": "以教练的“这一段是否能练到目标”标签训练可解释的时序分类器。",
+      "upgrade_condition": "片段级可训练/不可训练标签与不可训练原因",
+      "direction": "higher_is_more_jointly_available"
+    },
+    {
+      "number": 9,
+      "id": "mutual_workable_zone",
+      "label": "双方舒适可练区",
+      "meaning": "检查“共同可训练性较高”和“配合成本较低”是否在同一时间出现，寻找双方能够一起练、又不需要过度额外移动的区域。阶段总结可参考挑战适配，实时值不会回填事后感受。",
+      "question": "两个人是否同时处在“能够一起练、配合负荷又不过高”的区域？",
+      "reading": "数值越高，共同可训练性较高与配合成本较低越可能同时出现。",
+      "boundary": "“舒适”是操作性命名；实时值没有直接读取参与者的主观舒适感。",
+      "level": "dyad",
+      "live_available": true,
+      "current_estimator": "sqrt(joint_trainability × (1-support_cost))；阶段层有反馈时再以25%权重加入challenge_fit",
+      "current_inputs": [
+        "共同可训练性",
+        "配合成本",
+        "阶段末挑战适配（仅阶段）"
+      ],
+      "evidence_status": "objective_proxy_with_optional_human_anchor",
+      "model_strategy": "融合双方片段级舒适度/挑战度标注，训练个体化双人状态模型。",
+      "upgrade_condition": "双方同步片段标注、主观舒适度与教练可练性标签",
+      "direction": "higher_is_more_workable_under_current_definition"
+    },
+    {
+      "number": 10,
+      "id": "reciprocity",
+      "label": "回应互惠",
+      "meaning": "分别计算 P1 对 P2、P2 对 P1 的移动回应比例，再观察两个方向有多接近。它呈现的是双向回应结构是否对称，而不是简单统计两人的回应总量。",
+      "question": "P1 回应 P2 与 P2 回应 P1 的比例是否接近？",
+      "reading": "数值越高，两个方向的移动回应比例越对称。",
+      "boundary": "对称不等于公平或更好；在主练—配合分工中，不对称可能是合理设计。",
+      "level": "dyad",
+      "live_available": true,
+      "current_estimator": "response_reciprocity",
+      "current_inputs": [
+        "P1→P2回应率",
+        "P2→P1回应率"
+      ],
+      "evidence_status": "measured_movement_reciprocity",
+      "model_strategy": "升级为击球级双向供给—响应图，并按阶段角色条件化。",
+      "upgrade_condition": "击球者/接球者和真实响应结果",
+      "direction": "higher_is_more_symmetric_not_always_better"
+    },
+    {
+      "number": 11,
+      "id": "co_regulation",
+      "label": "共同调节",
+      "meaning": "比较双方移动强度随时间的变化，并在前后约 2 秒内寻找最强的滞后关联。它反映一方节奏改变后，另一方的移动变化是否经常在相近时间内与之对应。",
+      "question": "一方改变移动节奏后，另一方会不会在前后约 2 秒内跟着调整？",
+      "reading": "数值越高，两人的移动强度变化越容易在这一时间窗口内相互对应。",
+      "boundary": "它只说明时间上的联动，不代表一方导致另一方，也不等同于配合质量。",
+      "level": "dyad",
+      "live_available": true,
+      "current_estimator": "rolling/stage best lagged Pearson correlation, mapped from [-1,1] to [0,1]",
+      "current_inputs": [
+        "P1移动强度序列",
+        "P2移动强度序列"
+      ],
+      "evidence_status": "lagged_movement_association_not_causation",
+      "model_strategy": "用交叉注意力时序模型预测对方调整，并用角色与干预标签验证方向。",
+      "upgrade_condition": "更高频稳定姿态/球轨迹、调整发起者标注与角色干预",
+      "direction": "higher_is_stronger_lagged_association"
+    },
+    {
+      "number": 12,
+      "id": "role_fluidity",
+      "label": "角色流动性",
+      "meaning": "持续判断一段时间内主要由谁先发起移动，再统计主导方在 P1 与 P2 之间切换的频率。它用于呈现双方是长期固定分工，还是会交换运动发起角色。",
+      "question": "一段时间内，谁先发起移动的主导角色是否会在两人之间切换？",
+      "reading": "数值越高，移动发起的主导方切换越频繁。",
+      "boundary": "切换多不一定更好；稳定分工或指定主练角色也可能使数值较低。",
+      "level": "dyad",
+      "live_available": true,
+      "current_estimator": "initiative difference 超过死区后的主导方切换率，按6次/分钟封顶归一化",
+      "current_inputs": [
+        "双方发起节奏序列",
+        "阶段角色协议"
+      ],
+      "evidence_status": "movement_role_proxy",
+      "model_strategy": "加入击球者、供球者与主练者标注训练角色状态分段模型。",
+      "upgrade_condition": "逐拍角色标签、协商/调整事件和教练角色判断",
+      "direction": "context_dependent"
+    },
+    {
+      "number": 13,
+      "id": "tempo_coordination",
+      "label": "节奏协同",
+      "meaning": "把共同活跃、双方活跃程度的匹配以及前后时序上的共同调节组合起来，描述两人的运动节奏能否连续衔接。它关注的是整体运动节奏关系，而不是单次击球速度。",
+      "question": "两个人的活跃程度、共同活动和延迟调整能否形成衔接的运动节奏？",
+      "reading": "数值越高，双方活动节奏在当前运动代理上越容易衔接。",
+      "boundary": "当前没有使用击球时刻与球速，因此它不是网球击球节奏的直接测量。",
+      "level": "dyad",
+      "live_available": true,
+      "current_estimator": "mean(activation_match, mutual_activity, co_regulation)",
+      "current_inputs": [
+        "共同活跃",
+        "活跃匹配",
+        "共同调节"
+      ],
+      "evidence_status": "movement_tempo_proxy",
+      "model_strategy": "加入击球间隔、球速和回合节奏后训练多尺度节奏模型。",
+      "upgrade_condition": "击球时间、球速、回合边界与节奏合适度标签",
+      "direction": "higher_is_more_coordinated_movement_tempo"
+    },
+    {
+      "number": 14,
+      "id": "resilience",
+      "label": "关系韧性",
+      "meaning": "先识别共同活跃明显跌入低谷的事件，再统计两人是否能在随后 8 秒内回到本阶段的常态水平。它呈现双人运动状态在中断或低谷之后重新建立的频率。",
+      "question": "共同活跃跌入低谷后，两个人能否在 8 秒内回到本阶段的常态？",
+      "reading": "数值越高，已检测到的低谷事件越常在 8 秒内恢复。",
+      "boundary": "它只描述运动状态恢复，不代表心理韧性，也不知道低谷由失误还是暂停造成。",
+      "level": "dyad_stage",
+      "live_available": false,
+      "current_estimator": "low mutual_activity episodes recovered above max(0.35, stage median) within 8 slices",
+      "current_inputs": [
+        "共同活跃时间序列",
+        "中断—恢复证据段"
+      ],
+      "evidence_status": "movement_recovery_proxy",
+      "model_strategy": "加入失误、争议、中断原因与片段级恢复质量标签训练生存/时序模型。",
+      "upgrade_condition": "事件原因、失误真值、恢复定义和片段级恢复质量",
+      "direction": "higher_is_more_frequent_movement_recovery"
+    },
+    {
+      "number": 15,
+      "id": "relation_drift",
+      "label": "关系漂移",
+      "meaning": "把当前双人在多项个人与关系维度上的整体形态，与本阶段刚开始时的参照形态比较。数值概括的是整个关系形态改变了多少，而不是某一个指标单独升降。",
+      "question": "当前双人运动形态与阶段刚开始时相比，改变了多少？",
+      "reading": "数值越高，当前形态与起始参照的整体差异越大。",
+      "boundary": "变化大不代表变差，可能来自策略调整、热身、疲劳或跟踪波动。",
+      "level": "dyad",
+      "live_available": true,
+      "current_estimator": "distance_from_start / sqrt(12), clipped to [0,1]",
+      "current_inputs": [
+        "12维双人形态",
+        "阶段起始参照"
+      ],
+      "evidence_status": "measured_shape_change",
+      "model_strategy": "用变化点模型区分有意调整、疲劳、随机波动和跟踪误差。",
+      "upgrade_condition": "调整事件标注、疲劳/策略上下文与更可靠的跨机位不确定性",
+      "direction": "higher_is_more_change_not_better"
+    },
+    {
+      "number": 16,
+      "id": "stage_transfer",
+      "label": "阶段迁移保留",
+      "meaning": "把 D 计分小局中的双人形态，与两人在 B/C 主练阶段各自对应的典型中位形进行比较。它观察练习阶段出现过的运动关系形态，在更接近比赛的条件下还保留了多少相似结构。",
+      "question": "进入 D 计分小局后，双人形态是否仍像各自在 B/C 主练阶段的典型状态？",
+      "reading": "数值越高，D 阶段与对应主练阶段的实测中位形越相似。",
+      "boundary": "相似不等于学习迁移；没有独立后测和技术结果，不能证明能力被保留。",
+      "level": "dyad_stage",
+      "live_available": false,
+      "current_estimator": "1 - mean absolute distance(D median, assigned-practice-stage median)",
+      "current_inputs": [
+        "B/C主练阶段实测形态",
+        "D阶段实测形态",
+        "实验角色"
+      ],
+      "evidence_status": "descriptive_retention_not_learning_transfer",
+      "model_strategy": "增加延迟后测、随机化顺序与技术结果指标，用层级模型检验迁移。",
+      "upgrade_condition": "独立后测、击球质量真值、对照条件与重复样本",
+      "direction": "higher_is_more_shape_retention"
+    }
+  ],
+  "extensions": [
+    {
+      "id": "relational_asymmetry",
+      "label": "关系非对称度",
+      "meaning": "六个个人/关系轴上双方差异的平均绝对值；用于判断分工，不作公平判断。"
+    },
+    {
+      "id": "contribution_cost_frontier",
+      "label": "贡献—成本前沿",
+      "meaning": "把描述性搭档贡献变化与配合成本放在同一二维平面，寻找高贡献低成本的阶段。"
+    },
+    {
+      "id": "relation_volatility",
+      "label": "关系波动率",
+      "meaning": "相邻切片的共同可训练性、舒适可练区和互惠变化幅度。"
+    },
+    {
+      "id": "change_point_pressure",
+      "label": "关系转折压力",
+      "meaning": "超过阶段稳健变化阈值的切片比例，用于定位值得回看和标注的片段。"
+    },
+    {
+      "id": "morphology_overlap_proxy",
+      "label": "形态交叠代理",
+      "meaning": "两人面向彼此的共同参与与三条关系缝的组合；网站中的几何交叠是该关系状态的视觉编码。"
+    }
+  ]
+}
+
