@@ -2,6 +2,10 @@
 
 这是一个在 `E:\tennis` 中从零建立的独立网页，不读取、迁移或依赖任何旧 RallyLens 网页代码。
 
+## 在线访问
+
+公开演示：[https://discelysium.github.io/rallylens-web/](https://discelysium.github.io/rallylens-web/)
+
 ## 启动
 
 在 PowerShell 中运行：
